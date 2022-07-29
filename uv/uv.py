@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
 
 class Data:
     def __init__(self, path):
@@ -32,26 +33,28 @@ class P450(Data):
     @property
     def norm(self):
         return self.baselineCorr(self.norm800(self.df))
-    @property
-    def concs(self, extinction_coef = None):
+    def concs(self, extinction_coef=None):
         if extinction_coef is None:
             extinction_coef = self.extinction_coef
         df = self.norm
         A420 = df.loc[420,:]
-        conc_uM = A420/extinction_coef *1000
+        conc_uM = A420/extinction_coef*1000
         conc_uM.name = 'P450 conc/uM'
         return conc_uM
-    def norm800(self):
-        return self.df.subtract(self.df.loc[800,:],axis=1)
-    def baselineCorr(self, baselineCol = 0):
-        return self.df.subtract(self.df.iloc[:, baselineCol], axis = 0)
+    def norm800(self, df):
+        return df.subtract(df.loc[800,:],axis=1)
+    def baselineCorr(self, df, baselineCol=0):
+        return df.subtract(df.iloc[:, baselineCol], axis=0)
 
 class BM3(Data):
     def __init_(self, path, **args):
         super().__init__(path, **args)
         self.extinction_coef = 95
 
-def plot_traces(df, title = ''):
+def plot_traces(df, 
+                title=None,
+                save_path=None,
+                ):
     plt.figure(figsize=(15,7)) # manually make canvas
     for col in df: # loop through columns
         plt.plot(df[col], # plot columns
@@ -64,6 +67,8 @@ def plot_traces(df, title = ''):
     plt.xlim(250,800)
     plt.xticks(range(250,800,50)) # x axis ticks every 50 nm
     plt.title(title)
+    if save_path is not None:
+        plt.savefig(save_path)
     plt.show()
 
 def calc_concentrations(v1,v2, c1):
